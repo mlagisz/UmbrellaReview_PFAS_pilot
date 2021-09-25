@@ -3,8 +3,8 @@ title: "Suppl Information: PFAS umbrella review - code for pilot data"
 author: "M.Lagisz"
 date: "23/09/2021"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 # Supplementary Material - pilot data processing and visualisation
@@ -60,36 +60,37 @@ The study identity (authors, title) has been obscured in the pilot data extracti
 
 ```{r load pilot data}
 
-# Data from main data sheet
+# Data from .csv file - main data sheet
 mdata <- read_csv(here("data","ReviewMap_PFAS_main_pilot.csv"), skip = 0)
 #dim(mdata) #8 rows 34 columns
 
-# Data from locally saved and updated Excel file - Species_info sheet
+# Data from .csv file - Species_info sheet
 spdata <- read_csv(here("data","ReviewMap_PFAS_species_pilot.csv"), skip = 0) 
 #dim(spdata) #2 rows 4 columns
 # change to long format (one species per row - one or multple rows per study):
 spdata %>% select(-X4) %>% separate_rows(Species_scientific_name, sep='; ') -> spdata
 #dim(spdata) #29 rows 3 columns
 
-# Data from locally saved and updated Excel file - PFAS_types sheet
+# Data from .csv file - PFAS_types sheet:
 ptdata <- read_csv(here("data","ReviewMap_PFAS_types_pilot.csv"), skip = 0) 
 #dim(ptdata) #8 rows 4 columns
 # change to long format (one type per row - one or multple rows per study):
 ptdata %>% select(-X4) %>% separate_rows(PFAS_type, sep=', ') -> ptdata
 #dim(ptdata) #70 rows 3 columns
 
-# Data from locally saved and updated Excel file - PFAS_info sheet
+# Data from .csv file - PFAS_info sheet:
 pidata <- read_csv(here("data","PFAS_info.csv"), skip = 0) 
 #dim(pidata) #35 rows 7 columns
 
-# Bibliometric data of included papers (with references) from Scopus in .bib format:
+# Critical apprisal(AMSTAR2) from .csv file:
+qdata <- read_csv(here("data", "ReviewMap_PFAS_quality_pilot.csv"), skip = 0)
+#dim(qdata) #11 rows 38 columns
+qdata %>% select(-X34) -> qdata #remove empty column
+
+# Bibliometric data of included papers (with references) dwonloaded from Scopus in .bib format:
 bib_sco <- convert2df(here("data","scopus.bib"), dbsource = "scopus", format = "bibtex")
 #dim(bib_sco) #8 rows 33 columns
 
-# Critical apprisal data from locally saved and updated Excel file:
-qdata <- read_csv(here("data", "ReviewMap_PFAS_quality_pilot.csv"), skip = 0) #loads AMSTAR2 assessment sheet
-#dim(qdata) #11 rows 38 columns
-qdata %>% select(-X34) -> qdata #remove empty column
 ```
 
 
@@ -99,7 +100,9 @@ The data stored across multiple spreadsheets in excel needs to be reconfigured i
 
 ```{r merge data}
 
-## Prepare - remove columns starting with "Checked" (info on data checking - these fields will be present in the final extraction sheet), also remove any other redundand columns
+## Prepare - remove columns starting with "Checked" 
+# (info on data checking - these fields will be present in the final extraction sheet), 
+# also remove any other redundand columns:
 # mdata %>% select(-starts_with("Checked")) -> mdata
 # spdata %>% select(-starts_with("Checked")) -> spdata
 # ptdata %>% select(-starts_with("Checked")) -> ptdata
@@ -151,7 +154,8 @@ The pilot dataset presented here consists of `r length(unique(mdata$Study_ID))` 
 
 ```{r PFAS focus one_many barplot, height = 2, width = 8}
 #str(mdata)
-mdata %>% count(PFAS_focus, PFAS_one_many) %>% arrange(desc(n)) %>% filter(PFAS_focus != "NA") -> t_PFASfocus #filter out NA
+mdata %>% count(PFAS_focus, PFAS_one_many) %>% arrange(desc(n)) %>% 
+  filter(PFAS_focus != "NA") -> t_PFASfocus #filter out NA
 
 ggplot(t_PFASfocus, aes(x = PFAS_focus, y = n)) +
  theme_light() +
@@ -162,7 +166,9 @@ ggplot(t_PFASfocus, aes(x = PFAS_focus, y = n)) +
  geom_col(aes(fill = PFAS_one_many), width = 0.7) + 
  scale_y_continuous(name = "Article count") +
  theme_light() +
- theme(legend.position = "bottom", legend.box.background = element_rect(colour = "black"), legend.title = element_text(size=10),  legend.text=element_text(size = 10), axis.title.x = element_text(size = 10), axis.title.y = element_blank())
+ theme(legend.position = "bottom", legend.box.background = element_rect(colour = "black"), 
+       legend.title = element_text(size=10),  legend.text=element_text(size = 10), 
+       axis.title.x = element_text(size = 10), axis.title.y = element_blank())
 
 #ggsave(here("plots","figure_PFAS_focus.pdf"), width = 4, height = 6, units = "cm", scale = 2, device = cairo_pdf)
 
@@ -204,8 +210,10 @@ Some MeSH headings also have quantifiers (sometimes calld subheadings) - these a
 
 # change to long format (one species per row - one or multple rows per study):
 mdata %>% select(MeSH_terms) %>% separate_rows(MeSH_terms, sep = ";\\\n") %>% separate_rows(MeSH_terms, sep = "; ") -> t_MESH
-tmesh <- str_to_lower(trimws(t_MESH$MeSH_terms)) #bring to lower case and remove ending and trailing whitespace from character strings, single character vector
-tmesh <- sub("[\\*]", "", tmesh) #remove star character
+#bring to lower case and remove ending and trailing whitespace from character strings, single character vector:
+tmesh <- str_to_lower(trimws(t_MESH$MeSH_terms)) 
+#remove star character:
+tmesh <- sub("[\\*]", "", tmesh) 
 
 #separate terms before and after "/" into separate columns (headings and quantifiers, respectively)
 tmesh2 <- str_split_fixed(tmesh, " / ", n = 2)
@@ -220,7 +228,8 @@ colnames(t_MESH2)  <- c("MeSH_terms", "MeSH_headings", "MeSH_qualifiers")
 ```{r plot MeSH headings barplot, height = 4, width = 8}
 
 #count frequencies of headings
-t_MESH2 %>% select(MeSH_headings) %>% count(MeSH_headings) %>% arrange(desc(n)) %>% filter(MeSH_headings != "NA") ->  MeSH_headings_counts 
+t_MESH2 %>% select(MeSH_headings) %>% count(MeSH_headings) %>% arrange(desc(n)) %>% 
+  filter(MeSH_headings != "NA") ->  MeSH_headings_counts 
 #str(MeSH_headings_counts)
 
 MeSH_headings_counts$MeSH_headings <- factor(MeSH_headings_counts$MeSH_headings, levels = MeSH_headings_counts$MeSH_headings[order(MeSH_headings_counts$n, decreasing = FALSE)])
@@ -267,7 +276,8 @@ ggplot(MeSH_qualifiers_counts[, ], aes(x = MeSH_qualifiers, y = n)) +
 ```{r plot main subjects barplot, height = 2, width = 8}
 
 #str(mdata)
-mdata %>% count(Human_animal_environment) %>% arrange(desc(n)) %>% filter(Human_animal_environment != "NA") %>% filter(Human_animal_environment != "")-> t_subject #filter out NA
+mdata %>% count(Human_animal_environment) %>% arrange(desc(n)) %>% 
+  filter(Human_animal_environment != "NA") %>% filter(Human_animal_environment != "") -> t_subject #filter out NA
 t_subject$Human_animal_environment <- factor(t_subject$Human_animal_environment, levels = unique(t_subject$Human_animal_environment[order(t_subject$n, decreasing = FALSE)]))
 subjects_levels_order <- t_subject$Human_animal_environment[order(t_subject$n, decreasing = FALSE)] #save for another plot
 
@@ -294,7 +304,8 @@ ggplot(t_subject, aes(x = Human_animal_environment, y = n)) +
 #table(mdata$Human_animal_environment)
 
 # change to long format (one species per row - one or multple rows per study):
-mdata %>% group_by(Human_animal_environment) %>% select(MeSH_terms) %>% separate_rows(MeSH_terms, sep = ";\\\n") %>% separate_rows(MeSH_terms, sep = "; ") -> t_MESHby
+mdata %>% group_by(Human_animal_environment) %>% select(MeSH_terms) %>% 
+  separate_rows(MeSH_terms, sep = ";\\\n") %>% separate_rows(MeSH_terms, sep = "; ") -> t_MESHby
 #str(t_MESHby)
 
 tmeshby <- str_to_lower(trimws(t_MESHby$MeSH_terms)) #bring to lower case and remove ending and trailing whitespace from character strings, single character vector
@@ -308,8 +319,9 @@ t_MESHby2 <- bind_cols(t_MESHby$Human_animal_environment, tmeshby, tmeshby2[,1],
 colnames(t_MESHby2)  <- c("Subject", "MeSH_terms", "MeSH_headings", "MeSH_qualifiers")
 #str(t_MESHby2)
 
-t_MESHby2 %>% count(MeSH_qualifiers, Subject) %>% arrange(desc(n)) %>% filter(MeSH_qualifiers != "NA") %>% filter(MeSH_qualifiers != "") -> t_topic_subject #filter out NA
-#t_topic_subject$MESH_headings <- factor(t_topic_subject$MESH_headings, levels = unique(t_topic_subject$MESH_headings[order(t_topic_subject$n, decreasing = FALSE)]))
+t_MESHby2 %>% count(MeSH_qualifiers, Subject) %>% arrange(desc(n)) %>% filter(MeSH_qualifiers != "NA") %>% 
+  filter(MeSH_qualifiers != "") -> t_topic_subject #filter out NA
+
 t_topic_subject$Subject <- factor(t_topic_subject$Subject, levels = subjects_levels_order) #use order from the previous graph
 t_topic_subject$MeSH_qualifiers <- factor(t_topic_subject$MeSH_qualifiers, levels = MESH_qualifiers_order) #use order from the previous graph
 #str(t_topic_subject)
@@ -335,15 +347,13 @@ ggplot(t_topic_subject, aes(x = MeSH_qualifiers, y = n)) +
 # PFAS_one_many vs. Human_animal_environment contingency table
 mdata %>% count(Human_animal_environment, PFAS_one_many) -> t1
 
-# ggplot(t1, aes(x = Human_animal_environment, y = n)) +
-#  coord_flip()  +
-#  geom_col(aes(fill = PFAS_one_many), width = 0.7)
-
 ggplot(t1, aes(x = PFAS_one_many , y = n)) +
  coord_flip()  +
  geom_col(aes(fill = Human_animal_environment), width = 0.7) +
  theme_light() +  
  theme(legend.position = "bottom", legend.box.background = element_rect(colour = "black")) +
+ ylab("Article count") +
+ xlab("PFAS") +
  guides(fill=guide_legend(title="Subject:"))
 
 #ggsave(here("plots","figure_PFAS_focus_subjects.pdf"), width = 4, height = 2, units = "cm", scale = 2, device = cairo_pdf)
@@ -374,7 +384,7 @@ p_PFAStype <- ggplot(t_PFAStype, aes(x = PFAS_type, y = n)) +
 #theme(legend.position = "none", axis.title.x = element_text(size = 10), axis.title.y = element_blank())
 p_PFAStype
 
-#ggsave(here("plots","figure_PFAStype_subject.pdf"), width = 4, height = 8, units = "cm", scale = 2, device = cairo_pdf)
+#ggsave(here("plots","figure_PFAStype_subject.pdf"), width = 6, height = 8, units = "cm", scale = 2, device = cairo_pdf)
 
 ```
 
@@ -432,17 +442,17 @@ theme_classic() +
 
 ```{r area plots year, height = 2, width = 8}
 
-mspdata %>% count(Publication_year) %>% ggplot(aes(x = Publication_year, y = n)) + 
+mdata %>% count(Publication_year) %>% ggplot(aes(x = Publication_year, y = n)) + 
   geom_area(fill = '#919191', alpha = 1) +
-  geom_line(color = 'skyblue', size = 1) + 
-  geom_point(size=1, color = 'blue') +
+  geom_line(color = 'black', size = 1) + 
+  geom_point(size=1, color = 'black') +
   theme_minimal() +
   scale_x_continuous(name = "", limits = c(2005, 2020)) +
-  scale_y_continuous(name = "Article count", limits = c(0, 10)) +
+  scale_y_continuous(name = "Article count", limits = c(0, 5)) +
   ggtitle("Publication year") + 
   theme(plot.title = element_text(hjust = 0.5))
 
-#ggsave(here("plots","figure_area_publ_year.pdf"), width = 4, height = , units = "cm", scale = 2, device = cairo_pdf)
+#ggsave(here("plots","figure_area_publ_year.pdf"), width = 4, height = 3, units = "cm", scale = 2, device = cairo_pdf)
 
 #modified graph with breakdown by Review_type_claimed (needs more data points to be displayed properly)
 #mspdata %>% count(Publication_year, Review_type_claimed) %>% ggplot(aes(x = Publication_year, y = n, fill = Review_type_claimed, text = Review_type_claimed)) + geom_area()
@@ -582,7 +592,7 @@ qtable_long <- data.frame(study = as.factor(studies),
 rownames(qtable_long) = NULL
 qtable_long$question <- as.factor(qtable_long$question)
 qtable_long$question <- factor(qtable_long$question, levels(qtable_long$question)[c(1,9:16,2:8)]) #setting the order of levels - by Q-number
-qtable_long$study = factor(qtable_long$study, levels = unique(studies)[rev(order(unique(qtable_long$study)))]) #Re-order by study name (alphabetically)
+qtable_long$study <- factor(qtable_long$study, levels = unique(studies)[rev(order(unique(qtable_long$study)))]) #Re-order by study name (alphabetically)
 
 ##Make scoreplot      
 scoresplot <- ggplot(data = qtable_long, aes(y = study, x = question)) +
@@ -738,10 +748,12 @@ mdata %>% count(Raw_data) %>% arrange(desc(n)) %>% filter(Raw_data != "NA") -> t
 ggplot(t_Raw_data, aes(x = Raw_data, y = n)) +
  theme_light() +
  theme(legend.position = "none", axis.title.y = element_blank()) +
- labs(title = expression("Raw data availability")) + #~bold(A.)~' Type and subject'
+ labs(title = expression("Data availability")) + #~bold(A.)~' Type and subject'
  coord_flip()  +
  geom_col(aes(fill = Raw_data), width = 0.7) + 
  scale_y_continuous(name = "Article count")
+
+#ggsave(here("plots","figure_data_availability.pdf"), width = 4, height = 3, units = "cm", scale = 2, device = cairo_pdf)
 
 ```
 
@@ -795,10 +807,14 @@ knitr::kable(table(bib_sco$JI), caption = "Table SX. count of nymbver of publica
 
 ```{r keyword co-occurance matrix, echo = FALSE}
 
-#pdf(file="./plots/figure_keywords_network.pdf", width = 8, height = 4, pointsize = 8, family = "Helvetica", fonts = c("Helvetica"))
+#pdf(file="./plots/figure_keywords_network.pdf", width = 6, height = 5, pointsize = 12, family = "Helvetica", fonts = c("Helvetica"))
 #par(mfrow=c(1,1), mar=c(2,4,2,4))
 NetMatrix_keywords <- biblioNetwork(bib_sco, analysis = "co-occurrences", network = "keywords", sep = ";")
-NetMatrix_keywords_plot <- networkPlot(NetMatrix_keywords, normalize="association", n = 10, Title = "Keyword co-occurrences", type = "fruchterman", size.cex = TRUE, size = 10, remove.multiple = F, edgesize = 4, labelsize = 3, label.cex = TRUE, edges.min = 2, label.n = 9, alpha = 0.3) #adjust number and size of labels, as needed, etc.
+NetMatrix_keywords_plot <- networkPlot(NetMatrix_keywords, normalize="association", n = 10, 
+                                       Title = "Keyword co-occurrences", type = "fruchterman", 
+                                       size.cex = TRUE, size = 10, remove.multiple = F, 
+                                       edgesize = 4, labelsize = 3, label.cex = TRUE, 
+                                       edges.min = 2, label.n = 9, alpha = 0.3) #adjust number and size of labels, as needed, etc.
 #dev.off()
 
 #str(NetMatrix_keywords_plot)
@@ -811,7 +827,7 @@ NetMatrix_keywords_plot <- networkPlot(NetMatrix_keywords, normalize="associatio
 
 ```{r thematic map based on keywords}
 
-#pdf(file="./plots/figure_thematic_map.pdf",width = 5, height = 5, pointsize = 8, family = "Helvetica", fonts = c("Helvetica"))
+#pdf(file="./plots/figure_thematic_map.pdf", width = 5, height = 5, pointsize = 8, family = "Helvetica", fonts = c("Helvetica"))
 #par(mfrow=c(1,1), mar=c(0,0,0,0))
 map_thematic <- thematicMap(bib_sco, field = "ID", n = 1000, minfreq = 5, stemming = FALSE, size = 0.5, n.labels = 1, repel = TRUE)
 plot(map_thematic$map)
@@ -827,7 +843,10 @@ Currently there too few articles included for any conections between the cluster
 ```{r author collaboration network}
 
 NetMatrix_authors <- biblioNetwork(bib_sco, analysis = "collaboration",  network = "authors", sep = ";")
-NetMatrix_authors_plot <- networkPlot(NetMatrix_authors,  n = 50, Title = "Author collaboration", type = "auto", size = 2, size.cex = TRUE, edgesize = 10, labelsize = 1.1) #note there are potentially some mistakes in authors initials
+NetMatrix_authors_plot <- networkPlot(NetMatrix_authors,  n = 50, 
+                                      Title = "Author collaboration", 
+                                      type = "auto", size = 2, size.cex = TRUE, 
+                                      edgesize = 10, labelsize = 1.1) #note there are potentially some mistakes in authors initials
 
 ```
 
@@ -842,7 +861,9 @@ NetMatrix_authors_plot <- networkPlot(NetMatrix_authors,  n = 50, Title = "Autho
 bib_sco2 <- metaTagExtraction(bib_sco, Field = "AU_CO", sep = ";") #we need to extract countries from the affiliations first
 #bib_sco2$AU_CO[1:10]
 NetMatrix_country <- biblioNetwork(bib_sco2, analysis = "collaboration", network = "countries", sep = ";")
-NetMatrix_country_plot <-  networkPlot(NetMatrix_country, n = 50, Title = "Country collaboration", type = "auto", size=TRUE, remove.multiple=FALSE, labelsize=1.5)
+NetMatrix_country_plot <-  networkPlot(NetMatrix_country, n = 50, 
+                                       Title = "Country collaboration", type = "auto", size=TRUE, 
+                                       remove.multiple=FALSE, labelsize=1.5)
 
 #dev.off()
 
@@ -868,7 +889,9 @@ cbind(CR$Cited[1:10]) #ten most cited authors
 
 # classical article coupling network: Citation network
 NetMatrix_coupling <- biblioNetwork(bib_sco, analysis = "coupling", network = "references", sep = "; ")
-NetMatrix_coupling_plot <- networkPlot(NetMatrix_coupling, n = 20, Title = "Paper co-citation", type = "fruchterman", size=T, remove.multiple=FALSE, labelsize=0.8,edgesize = 5) #plot the network
+NetMatrix_coupling_plot <- networkPlot(NetMatrix_coupling, n = 20, 
+                                       Title = "Paper co-citation", type = "fruchterman", size=T, 
+                                       remove.multiple=FALSE, labelsize=0.8,edgesize = 5) #plot the network
 
 ``` 
 
@@ -878,7 +901,7 @@ Currently not enough papers to create this network plot.
   
 ```{r bibliometrix co-citation network, eval = TRUE, warning = FALSE}
 
-histResults <- histNetwork(bib_sco, sep = ";") # "n" (number of most cited references to select) picked manually, larger numbers may give error
+histResults <- histNetwork(bib_sco, sep = ";") 
 # not possible now - Found 2 documents with no empty Local Citations (LCS)
 
 # pdf(file="./plots/Figure_hstorical_network.pdf", width=8, height=8, pointsize=10)
@@ -911,7 +934,9 @@ ggplot(t1, aes(x = Review_type_claimed, y = n)) +
  scale_fill_brewer() +
  geom_col(aes(fill = Human_animal_environment), width = 0.7) + 
  theme_light() +
-  theme(legend.position = "bottom", legend.box.background = element_rect(colour = "black"), legend.title = element_blank(),   legend.text=element_text(size = 4), axis.title.x = element_text(size = 10), axis.title.y = element_blank())
+  theme(legend.position = "bottom", legend.box.background = element_rect(colour = "black"), 
+        legend.title = element_blank(),   legend.text=element_text(size = 4), 
+        axis.title.x = element_text(size = 10), axis.title.y = element_blank())
 
 #ggsave(here("plots","figure_barplot_type_subject.pdf"), width = 4, height = 4, units = "cm", scale = 2, device = cairo_pdf)
 
