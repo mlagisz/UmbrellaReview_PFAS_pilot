@@ -7,13 +7,13 @@ output:
   pdf_document: default
 ---
 
-# Supplementary Material - pilot data processing and visualisation
+# Supplementary Material - pilot data processing and visualization
 
 ## PFAS exposure of humans, animals and the environment: protocol of an evidence review map and bibliometric analysis    
 
 In this Rmarkdown document we provide preliminary workflow and code for:   
 
- - **Objective 1.	Mapping: What evidence on PFAS has been synthesized?** We aim to reveal what areas in the realm of PFAS health-related and environmental research have been synthesised the most and where syntheses of evidence are lacking.      
+ - **Objective 1.	Mapping: What evidence on PFAS has been synthesized?** We aim to reveal what areas in the realm of PFAS health-related and environmental research have been synthesized the most and where syntheses of evidence are lacking.      
 
  - **Objective 2.	Critical appraisal: How robust are syntheses of PFAS evidence?** We will examine the included syntheses for their reporting quality and potential biases, in order to assess reliability of reviews’ conclusions, reveal syntheses that should be re-done, and highlight the aspects of review methodology that need to be improved.  
  
@@ -53,7 +53,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 Manually extracted pilot data is stored in four separate **.csv** files representing different aspects of the data (extracted via structured predefined Google Forms - one per table). Additional fixed table stores pre-extracted data on PFAS types included in this map.   
 
-Bibliometric data records are exported from Scopus (including cited references field) in .bib format and locally saved as **scopus.bib**. the pilot version of this file only includes bibliometric informations of systeamtic review family reviews included in Objectives 1 and 2. In the actual work bibliometric information will be expanded to all reviews on PFAS exposure in humans, animals and the environment.   
+Bibliographic data records are exported from Scopus (including cited references field) in .bib format and locally saved as **scopus.bib**. the pilot version of this file only includes bibliographic information of 'systeamtic review family'-like reviews included in Objectives 1 and 2. In the actual work bibliographic information will be expanded to all reviews on PFAS exposure in humans, animals and the environment.   
 
 The study identity (authors, title) has been obscured in the pilot data extraction file. It will be public in the final data extraction files.      
 
@@ -96,7 +96,7 @@ bib_sco <- convert2df(here("data","scopus.bib"), dbsource = "scopus", format = "
 
 ## Merge data stored across tables   
 
-The data stored across multiple spreadsheets in excel needs to be reconfigured into flat files for analyses.       
+The data stored across multiple flat spreadsheets needs merged for some of the analyses.       
 
 ```{r merge data}
 
@@ -133,8 +133,6 @@ mpidata <- left_join(mdata, ptidata, by = "Study_ID")
 
 ## Make a simple summary table of included papers    
 
-This table is made from the manually-extracted data stored in an Excel file. Complete references are stored in a bibliometric .bib file and will be later used for bibliometric analyses abnd creating bibliography.   
-
 **Note:** authors names and paper titles are blinded for the protocol.    
 
 ```{r simple table of included studies, eval = TRUE}
@@ -146,8 +144,7 @@ ________________________________________________________________________________
 
 ## Objective 1.	Mapping: What evidence on PFAS has been synthesized?
 
-Here we aim to reveal what areas in the realm of PFAS health-related and environmental research have been synthesized the most and where syntheses of evidence are lacking. Below, we include examples of potential data summaries and visualizations that will form the evidence map.  
-The pilot dataset presented here consists of `r length(unique(mdata$Study_ID))` review studies.   
+Here we aim to reveal what areas in the realm of PFAS health-related and environmental research have been synthesized the most and where syntheses of evidence are lacking. Below, we include examples of potential data summaries and visualizations that will form the evidence review map. The pilot dataset presented here consists of `r length(unique(mdata$Study_ID))` review studies.   
 
 
 ### Focus on PFAS, or POPs, and how many PFAS
@@ -200,11 +197,11 @@ ggplot(t_PFAStype, aes(x = PFAS_type, y = n)) +
 ```
 
 
-### Main review topics (MESH terms) 
+### Main review topics (MeSH terms)  
 
-Each records usually has multiple associated MESH terms, which are spearated with a semicolon (or a semicolor with a newline symbol).   
+Each records usually has multiple associated MeSH terms, which are separated with a semicolon (or a semicolon with a newline symbol).   
 The main topics of the article are denoted by the MeSH terms with asterisks *, but some records will not have main topics, so its safer to ignore this information.    
-Some MeSH headings also have quantifiers (sometimes calld subheadings) - these are shown after a forward-slash and are used to "describe the specific aspects of the MeSH heading that are pertinent to the article" (https://www.nlm.nih.gov/bsd/indexing/training/SUB_010.html). MeSH terms and quantifiers could be analysesd separately.  
+Some MeSH headings also have qualifiers (sometimes called subheadings) - these are shown after a forward-slash and are used to "describe the specific aspects of the MeSH heading that are pertinent to the article" (https://www.nlm.nih.gov/bsd/indexing/training/SUB_010.html). MeSH terms and qualifiers could be analysed separately.  
 
 ```{r plot main topics barplot prep, height = 4, width = 8}
 
@@ -285,7 +282,7 @@ subjects_levels_order <- t_subject$Human_animal_environment[order(t_subject$n, d
 ggplot(t_subject, aes(x = Human_animal_environment, y = n)) +
   geom_col(aes(fill = ""), width = 0.7) +
   theme_light() +
-  labs(title = expression("Main subject reviewed")) + #~bold(A.)~' Type and subject'
+  labs(title = expression("Main subjects reviewed")) + #~bold(A.)~' Type and subject'
   coord_flip()+
   scale_y_continuous(name = "Article count") +
   scale_fill_manual(values = c("#919191")) +
@@ -295,9 +292,9 @@ ggplot(t_subject, aes(x = Human_animal_environment, y = n)) +
 ```
 
 
-### MCombining MESH qualifiers with main review subjects
+### Combining MeSH qualifiers with main review subjects
 
-```{r plot ESH qualifiers with main review subjects barplot, height = 4, width = 8}
+```{r plot MeSH qualifiers with main review subjects barplot, height = 4, width = 8}
 
 #str(mdata)
 #subset main dat by main subject
@@ -328,7 +325,7 @@ t_topic_subject$MeSH_qualifiers <- factor(t_topic_subject$MeSH_qualifiers, level
 
 ggplot(t_topic_subject, aes(x = MeSH_qualifiers, y = n)) +
  theme_light() +
- labs(title = expression("MeSH_qualifiers and subjects")) + #~bold(A.)~' Type and subject'
+ labs(title = expression("MeSH qualifiers and subjects reviewed")) + #~bold(A.)~' Type and subject'
  coord_flip()  +
  scale_fill_brewer() +
  geom_col(aes(fill = Subject), width = 0.7) + 
@@ -373,7 +370,7 @@ t_PFAStype$PFAS_type <- factor(t_PFAStype$PFAS_type, levels = PFAS_levels_order)
 
 p_PFAStype <- ggplot(t_PFAStype, aes(x = PFAS_type, y = n)) +
  theme_light() +
- labs(title = expression("PFAS type and main subjects")) + #~bold(A.)~' Type and subject'
+ labs(title = expression("PFAS type and main subjects reviewed")) + #~bold(A.)~' Type and subject'
  coord_flip()  +
  scale_fill_brewer() +
  geom_col(aes(fill = Human_animal_environment), width = 0.7) + 
@@ -469,14 +466,15 @@ ________________________________________________________________________________
 Here we will examine the included syntheses for their reporting quality and potential biases, in order to assess reliability of reviews’ conclusions, reveal syntheses that should be re-done, and highlight the aspects of review methodology that need to be improved.  
 
 
-## Make a table with AMSTAR2 questions
+## Make a table with AMSTAR2 questions  
 
-The questions were stored separately in the first row of the file, and were loaded separately.Wwe display them in a table. Note that full description of the questions (from an adapted AMSTAR2 checklist, Shea et al. 2017), with coding instructions, are provided in the protocol.    
+The questions were stored separately in the first row of the file, and were loaded separately. 
+We display them in a table, alongside the short labels that can be used in the plots. Full description of the questions and coding rules (from an adapted AMSTAR2 checklist; Shea et al. 2017; Samarasinghe et al. 2019), are provided in the protocol.    
 
 ```{r AMSTAR2 questions}
 questions_list <- qdata %>% select(starts_with("Q") & !ends_with("_comment")) %>% colnames()  #only select columns with assessment codes (data)
 
-questions <- tibble(questions = questions_list, label = c("question and criteria", "a priori protocol", "included study designs", "comprehensive search", "selection duplicated", "extraction duplicated", "list of excluded studies", "summary of included studies", "critical apprisal", "sources of funding", "quantitative synthesis", "risk of bias", "effect of bias", "variability investigated", "publication bias", "conflict of interest"))
+questions <- tibble(questions = questions_list, label = c("question and criteria", "a priori protocol", "included study designs", "comprehensive search", "selection duplicated", "extraction duplicated", "list of excluded studies", "summary of included studies", "critical appraisal", "sources of funding", "quantitative synthesis", "risk of bias", "effect of bias", "variability investigated", "publication bias", "conflict of interest"))
 #str(questions)
 
 knitr::kable(questions, caption = "Table. List of AMSTAR2 questions with  labels for plotting")
@@ -485,7 +483,7 @@ knitr::kable(questions, caption = "Table. List of AMSTAR2 questions with  labels
 
 ## Summary plot for pilot AMSTAR2 data  
 
-AMSTAR2 assessment results as percentages of each answer score per question   
+AMSTAR2 assessment results as percentages of each answer score per question.   
 
 ```{r plot AMSTAR2 summary}
 ## prepare data 
@@ -557,9 +555,9 @@ summaryplot
 ```
 
 
-## Individual scores plot for pilot AMSTAR2 data  
+## Individual scores plot for pilot AMSTAR2 data   
 
-AMSTAR2 assessment results as a score per article per question   
+AMSTAR2 assessment results as a score per article per question.   
 
 ```{r AMSTAR2 scores}
 ## data prep
@@ -643,7 +641,7 @@ finalplot <- summaryplot + scoresplot + plot_layout(ncol = 1)
 
 ### COI statement
 
-Whether Conflict Of Interests statement is provided for individual reviews   
+Whether Conflict Of Interests statement is provided for individual reviews.   
 
 ```{r COI_statement barplot, height = 2, width = 8}
 
@@ -662,7 +660,7 @@ ggplot(t_COI_statement, aes(x = COI_statement, y = n)) +
 
 ### COI present
 
-Whether potential Conflict Of Interests is acknowledged for individual reviews    
+Whether potential Conflict Of Interests is acknowledged for individual reviews.    
 
 ```{r COI_present barplot, height = 2, width = 8}
 
@@ -679,9 +677,9 @@ ggplot(t_COI_present, aes(x = COI_present, y = n)) +
 ```
 
 
-### Funding statement
+### Funding statement  
 
-Whether funding statement is provided for individual reviews   
+Whether funding statement is provided for individual reviews.   
 
 ```{r Funding_statement barplot, height = 2, width = 8}
 
@@ -698,9 +696,9 @@ ggplot(t_Funding_statement, aes(x = Funding_statement, y = n)) +
 ```
 
 
-### Non-profit funding acknowledged
+### Non-profit funding acknowledged  
 
-Whether funding from non-profit (NGO, goverment, universities, etc.) is acknowledged for individual reviews    
+Whether funding from non-profit (NGO, government, universities, etc.) is acknowledged for individual reviews.    
 
 ```{r t_Nonprofit_funding barplot, height = 2, width = 8}
 mdata <- mdata %>% rename(Nonprofit_funding = "Non-profit_funding") 
@@ -718,9 +716,9 @@ ggplot(t_Nonprofit_funding, aes(x = Nonprofit_funding, y = n)) +
 ```
 
 
-### Industry funding acknowledged
+### Industry funding acknowledged  
 
-Whether funding from industry (including govement-inductry collaborations) is acknowledged for individual reviews    
+Whether funding from industry (including government-industry collaborations) is acknowledged for individual reviews.    
 
 ```{r Industry_funding barplot, height = 2, width = 8}
 
@@ -737,9 +735,9 @@ ggplot(t_Funding_industry, aes(x = Industry_funding, y = n)) +
 ```
 
 
-### Data accessibility
+### Data availability  
 
-Whether extracted data is available for individual reviews   
+Whether extracted data is made available for individual reviews.   
 
 ```{r Raw_data barplot, height = 2, width = 8}
 #str(mdata)
@@ -758,9 +756,9 @@ ggplot(t_Raw_data, aes(x = Raw_data, y = n)) +
 ```
 
 
-### Code accessibility
+### Code availability  
 
-Whether code for analyses  is available for individual reviews    
+Whether code for analyses is made available for individual reviews.    
 
 ```{r Analysis_code barplot, height = 2, width = 8}
 
@@ -781,10 +779,11 @@ ggplot(t_Analysis_code, aes(x = Analysis_code, y = n)) +
 __________________________________________________________________________________________________
 
 ## Objective 3. Bibliometrics: How is synthesized PFAS evidence connected?   
-Examine which countries and institutions are mostly involved in secondary PFAS research and what do the networks between these institutions look like.  
+
+Examine which countries and institutions are mostly involved in secondary PFAS research. Visualizing networks between these institutions.     
 
 
-### Basic summaries from bibliometric records   
+### Basic summaries from bibliographic records   
 
 ```{r basic bibliometric summaries}
 
@@ -798,12 +797,12 @@ plot(x = results1, k = 10, pause = F) #produces a sequence of standard summary p
 ```{r table - counts by journal}
 
 # Publication journals
-knitr::kable(table(bib_sco$JI), caption = "Table SX. count of nymbver of publications per journal")
+knitr::kable(table(bib_sco$JI), caption = "Table SX. counts of numbers of publications per journal")
 
 ```
 
 
-### Making keyword co-occurance matrix   
+### Making keyword co-occurrence matrix   
 
 ```{r keyword co-occurance matrix, echo = FALSE}
 
@@ -828,7 +827,7 @@ NetMatrix_keywords_plot <- networkPlot(NetMatrix_keywords, normalize="associatio
 ```{r thematic map based on keywords}
 
 #pdf(file="./plots/figure_thematic_map.pdf", width = 5, height = 5, pointsize = 8, family = "Helvetica", fonts = c("Helvetica"))
-#par(mfrow=c(1,1), mar=c(0,0,0,0))
+par(mfrow=c(1,1), mar=c(0,2,0,2))
 map_thematic <- thematicMap(bib_sco, field = "ID", n = 1000, minfreq = 5, stemming = FALSE, size = 0.5, n.labels = 1, repel = TRUE)
 plot(map_thematic$map)
 #dev.off()
@@ -838,7 +837,8 @@ plot(map_thematic$map)
 
 ### Author collaboration network
 
-Currently there too few articles included for any conections between the clusters (publications) to be visiable.  
+Links between review authors based on their co-authorship on these reviews. 
+Currently, there are too few articles included for the connections between the clusters (publications) to be visible, although it looks like one set of authors co-authored two of the eight reviews from the pilot set.  
 
 ```{r author collaboration network}
 
@@ -852,6 +852,8 @@ NetMatrix_authors_plot <- networkPlot(NetMatrix_authors,  n = 50,
 
 
 ### Country collaboration network
+
+Links between countries, based on the institutional affiliations of the review authors.   
 
 ```{r country collaboration network}
 
@@ -870,7 +872,7 @@ NetMatrix_country_plot <-  networkPlot(NetMatrix_country, n = 50,
 ```
 
 
-### Analysing lists of references (cited works)     
+### Analyzing lists of references (cited works)     
 
 ```{r bibliometrix test with refs, eval = TRUE, warning = FALSE}
  
@@ -942,9 +944,11 @@ ggplot(t1, aes(x = Review_type_claimed, y = n)) +
 
 ```
 
-Code for other simple plots with two crossed variables 
+
 
 ```{r other simple plots, eval = FALSE}
+## Code for other simple plots with two crossed variables (not run for pilot data)
+
 # Barplot example Review_type_claimed vs. Human_animal_environment contingency table
 mdata %>% count(Human_animal_environment, Review_type_claimed) -> t1
 
